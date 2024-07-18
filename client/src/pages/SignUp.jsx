@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import {Link} from 'react-router-dom';
+import {Link,useNavigate} from 'react-router-dom';
 
 export default function SignUp() {
 
   const [formData, setFormData] = useState({});
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate=useNavigate();
 
   const handleChange = (e) =>{
     setFormData({...formData, [e.target.id]: e.target.value});
@@ -16,17 +17,18 @@ export default function SignUp() {
 
     try {
       setLoading(true);
-      setError(falese);
+      setError(false);
       const res = await fetch('/api/auth/signup',{
         method:'POST',
         headers: {
           'Content-Type' : 'application/json',
         },
-        body: JSON.stringify(FormData),
+        body: JSON.stringify(formData),
       });
       const data = await res.json();
       setLoading(false);
-
+// console.log(data)
+      navigate('/sign-in')
       if (data.success === false){
         setError(true);
         return;
