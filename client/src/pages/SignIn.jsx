@@ -18,7 +18,7 @@ export default function SignIn() {
     e.preventDefault();
 
     try {
-      dispatchEvent(signStart());
+      dispatch(signStart());
       const res = await fetch('/api/auth/signin',{
         method:'POST',
         headers: {
@@ -27,14 +27,15 @@ export default function SignIn() {
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-      dispatchEvent(signInSuccess(data));
-// console.log(data)
-      navigate('/')
+     
+
       if (data.success === false){
-        dispatchEvent(signInFailure());
+        dispatch(signInFailure());
         return;
       }
-
+      dispatch(signInSuccess(data));
+      console.log(data)
+      navigate('/')
     } catch (error) {
       dispatch(signInFailure(error));
     }  
