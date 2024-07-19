@@ -26,14 +26,14 @@ export default function SignIn() {
         },
         body: JSON.stringify(formData),
       });
-      const data = await res.json();
-     
 
+      const data = await res.json();
+
+      dispatch(signInSuccess(data));
       if (data.success === false){
-        dispatch(signInFailure());
+        dispatch(signInFailure(data));
         return;
       }
-      dispatch(signInSuccess(data));
       console.log(data)
       navigate('/')
     } catch (error) {
@@ -64,7 +64,9 @@ export default function SignIn() {
         </Link>
       </div>
 
-      <p className='text-red-700 mt-5'>{error && 'Something went Wrong'}</p>
+      <p className='text-red-700 mt-5'>
+        {error ? error.message || 'Something went Wrong' : ''}
+      </p>
       
     </div>
   )
