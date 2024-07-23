@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { app } from '../firebase';
-import { updateUserStart, updateUserSuccess, updateUserFailure } from '../redux/user/userSlice';
+import { updateUserStart, updateUserSuccess, updateUserFailure, deleteUserStart, deleteUserSuccess, deleteUserFailure } from '../redux/user/userSlice';
 
 export default function Profile() {
   const fileRef = useRef(null);
@@ -11,7 +11,8 @@ export default function Profile() {
   const [imagePercent, setImagePercent] = useState(0);
   const [imageError, setImageError] = useState(false);
   const [formData, setFormData] = useState({});
-  const [updateSuccess,setUpdateSuccess]=useState(false);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
   
   const { currentUser, loading, error } = useSelector(state => state.user);
 
@@ -78,15 +79,39 @@ export default function Profile() {
         return;
       }
       dispatch(updateUserSuccess(data));
-      setUpdateSuccess(true)
+      setUpdateSuccess(true);
     } catch (error) {
       dispatch(updateUserFailure(error));
     }
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      dispatch(deleteUserStart());
+      const res = await fetch(`/api/user/delete/${currentUser._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`, // Include the token
+          'Content-Type': 'application/json'
+        },
+      });
+      const data = await res.json();
+      if (!data.success) {
+        dispatch(deleteUserFailure(data));
+        return;
+      }
+      dispatch(deleteUserSuccess(data));
+      setDeleteSuccess(true);
+      alert('User deleted successfully');
+    } catch (error) {
+      dispatch(deleteUserFailure(error));
+    }
+  };
+  
+
   return (
     <div className='p-3 max-w-lg mx-auto'>
-      <h1 className='text-3xl font-semibold text-center my-7 '>Profile</h1>
+      <h1 className='text-3xl font-semibold text-center my-7'>Profile</h1>
 
       <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
         <input type='file' ref={fileRef} hidden accept='image/*' onChange={(e) => setImage(e.target.files[0])} />
@@ -99,7 +124,7 @@ export default function Profile() {
 
         <p className='text-sm self-center'>
           {imageError ? (
-            <span className='text-red-700'>Error uploading image(File size must be less than 2 MB)</span>
+            <span className='text-red-700'>Error uploading image (File size must be less than 2 MB)</span>
           ) : imagePercent > 0 && imagePercent < 100 ? (
             <span className='text-slate-700'>{`Uploading: ${imagePercent} %`}</span>
           ) : imagePercent === 100 ? (
@@ -134,18 +159,18 @@ export default function Profile() {
         />
 
         <button className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>
-        {loading ? 'Loading...':'update'}
+          {loading ? 'Loading...' : 'Update'}
         </button>
       </form>
 
       <div className='flex justify-between mt-5'>
-        <span className='text-red-700 cursor-pointer'>Delete Account</span>
+        <span onClick={handleDeleteAccount} className='text-red-700 cursor-pointer'>Delete Account</span>
         <span className='text-red-700 cursor-pointer'>Sign-Out</span>
       </div>
 
-          <p className='text-red-700 mt-5'>{error && 'Something went wrong!'}</p>
-          <p className='text-green-700 mt-5'>{updateSuccess && 'User updated successfully!'}</p>
-
+      <p className='text-red-700 mt-5'>{error && 'Something went wrong!'}</p>
+      <p className='text-green-700 mt-5'>{updateSuccess && 'User updated successfully!'}</p>
+      <p className='text-green-700 mt-5'>{deleteSuccess && 'User deleted successfully!'}</p>
     </div>
   );
 }
